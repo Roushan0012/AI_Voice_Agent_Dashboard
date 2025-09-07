@@ -1,194 +1,58 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>AI Voice Agent Dashboard - RupeeQ</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      background: #f9faff;
-    }
-    h1 {
-      background: #243449;
-      color: white;
-      padding: 20px 20px 18px 20px;
-      margin: 0;
-      font-size: 28px;
-    }
-    .cards-row {
-      display: flex;
-      gap: 16px;
-      margin: 15px 0 10px 0;
-    }
-    .card {
-      flex: 1;
-      padding: 20px;
-      color: white;
-      border-radius: 10px;
-      font-size: 20px;
-    }
-    .green {
-      background: linear-gradient(90deg, #26d07c, #129945);
-    }
-    .pink {
-      background: linear-gradient(90deg, #f7971e, #ffd200);
-    }
-    .blue {
-      background: linear-gradient(90deg, #00c6ff, #0072ff);
-    }
-    .aqua {
-      background: linear-gradient(90deg, #00b09b, #96c93d);
-    }
-    .stat-value {
-      font-size: 38px;
-      font-weight: bold;
-      margin: 10px 0;
-    }
-    .filters-bar {
-      padding: 15px;
-      background: white;
-      border-radius: 8px;
-      margin-bottom: 15px;
-    }
-    label {
-      margin-right: 20px;
-    }
-    .charts-row {
-      display: flex;
-      gap: 20px;
-      margin-bottom: 24px;
-    }
-    .chart-container {
-      background: white;
-      flex: 1;
-      border-radius: 8px;
-      padding: 15px;
-    }
-    .data-header-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-top: 20px;
-      margin-bottom: 0;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 0;
-      background: white;
-      border-radius: 8px;
-      overflow: hidden;
-      margin-bottom: 32px;
-    }
-    th, td {
-      padding: 10px;
-      border: 1px solid #ddd;
-      font-size: 14px;
-      text-align: left;
-    }
-    th {
-      background: #eee;
-    }
-    .badge {
-      border-radius: 12px;
-      padding: 4px 10px;
-      font-size: 12px;
-      color: white;
-      display: inline-block;
-      text-align: center;
-      min-width: 60px;
-    }
-    .status-active {
-      background: #16a34a;
-    }
-    .status-ended {
-      background: #3b82f6;
-    }
-    .outcome-interested {
-      background: #10b981;
-    }
-    .outcome-neutral {
-      background: #facc15;
-      color: black;
-    }
-    .outcome-notinterested {
-      background: #ef4444;
-    }
-    .sentiment-badge {
-      background: #3b82f6;
-      color: #fff;
-    }
-    .live-section {
-      margin-top: 30px;
-      background: white;
-      padding: 20px;
-      border-radius: 8px;
-    }
-    button {
-      margin: 5px;
-      padding: 8px 12px;
-      cursor: pointer;
-      border: none;
-      border-radius: 6px;
-      font-size: 14px;
-      background: #2563eb;
-      color: #fff;
-      transition: background 0.2s;
-    }
-    button:disabled {
-      background: #94a3b8;
-      cursor: not-allowed;
-    }
-    button.closeButton {
-      position: absolute;
-      top: 10px;
-      right: 20px;
-      padding: 5px 10px;
-      font-size: 16px;
-      background: #ef4444;
-      color: #fff;
-      border-radius: 6px;
-    }
-    /* Modal styles */
+    body { font-family: Arial, sans-serif; margin: 0; background: #f9faff; }
+    h1 { background: #243449; color: white; padding: 20px 20px 18px 20px; margin: 0; font-size: 28px; }
+    .cards-row { display: flex; gap: 16px; margin: 15px 0 10px 0; }
+    .card { flex: 1; padding: 20px; color: white; border-radius: 10px; font-size: 20px; }
+    .green { background: linear-gradient(90deg, #26d07c, #129945); }
+    .pink { background: linear-gradient(90deg, #f7971e, #ffd200); }
+    .blue { background: linear-gradient(90deg, #00c6ff, #0072ff); }
+    .aqua { background: linear-gradient(90deg, #00b09b, #96c93d); }
+    .stat-value { font-size: 38px; font-weight: bold; margin: 10px 0; }
+    .filters-bar { padding: 15px; background: white; border-radius: 8px; margin-bottom: 15px; }
+    label { margin-right: 20px; }
+    .charts-row { display: flex; gap: 20px; margin-bottom: 24px; }
+    .chart-container { background: white; flex: 1; border-radius: 8px; padding: 15px; }
+    .data-header-row { display: flex; align-items: center; justify-content: space-between; margin-top: 20px; margin-bottom: 0; }
+    table { width: 100%; border-collapse: collapse; margin-top: 0; background: white; border-radius: 8px; overflow: hidden; margin-bottom: 32px; }
+    th, td { padding: 10px; border: 1px solid #ddd; font-size: 14px; text-align: left; }
+    th { background: #eee; }
+    .badge { border-radius: 12px; padding: 4px 10px; font-size: 12px; color: white; display: inline-block; text-align: center; min-width: 60px; }
+    .status-active { background: #16a34a; }
+    .status-ended { background: #3b82f6; }
+    .outcome-interested { background: #10b981; }
+    .outcome-neutral { background: #facc15; color: black; }
+    .outcome-notinterested { background: #ef4444; }
+    .sentiment-badge { background: #3b82f6; color: #fff; }
+    .live-section { margin-top: 30px; background: white; padding: 20px; border-radius: 8px; }
+    button { margin: 5px; padding: 8px 12px; cursor: pointer; border: none; border-radius: 6px; font-size: 14px; background: #2563eb; color: #fff; transition: background 0.2s; }
+    button:disabled { background: #94a3b8; cursor: not-allowed; }
+    .closeButton { position: absolute; top: 15px; right: 20px; padding: 5px 10px; font-size: 25px; background: #ef4444; color: #fff; border-radius: 50%; z-index:2;}
     #callViewModal {
-      display: none;
-      position: fixed;
-      top: 10%;
-      left: 20%;
-      width: 60%;
-      max-height: 80%;
-      overflow: auto;
-      background: #fff;
-      padding: 20px;
-      box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
-      border-radius: 8px;
-      z-index: 1000;
+      display: none; position: fixed; top: 5%; left: 50%; transform: translateX(-50%);
+      background: #fff; padding: 40px 32px 24px 32px; border-radius: 12px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.25); max-width: 620px; min-width: 370px;
+      max-height: 90vh; width: 90vw; overflow-y: auto; z-index: 1000;
     }
-    #entityTable {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-    }
-    #entityTable th, #entityTable td {
-      border: 1px solid #ddd;
-      padding: 8px;
-      text-align: left;
-      font-size: 13px;
-    }
-    .modal-label {
-      font-weight: bold;
-      margin-bottom: 6px;
-      font-size: 15px;
-      display: block;
-    }
+    #callViewModal h2 { margin-top: 0; font-size: 23px; }
+    .modal-info { margin: 6px 0 4px 0; display: flex; flex-wrap: wrap; row-gap: 5px;}
+    .modal-info-row { width:48%; min-width:170px; margin-top:5px;}
+    .modal-info-row b {width: 110px; display:inline-block;}
+    #modalTranscript { background: #f3f3f3; height:120px; overflow:auto; border-radius:6px; padding:12px; font-size:14px; font-family:monospace; }
+    #modalAudio { width:100%; margin-top:9px;}
+    .modal-label { font-weight:bold; display:block; margin-top:10px; }
+    #entityTable { width: 100%; border-collapse: collapse; margin-top: 7px;}
+    #entityTable th, #entityTable td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 13px;}
+    #entityTable th { background: #f3f3f3;}
     @media (max-width: 800px) {
-      .cards-row, .charts-row {
-        flex-direction: column;
-      }
-      #callViewModal {
-        left: 5%;
-        width: 90%;
-      }
+      .cards-row, .charts-row { flex-direction: column; }
+      #callViewModal { width:99vw; min-width:0; left:0; transform:none; }
+      .modal-info-row {width: 98%;}
     }
   </style>
 </head>
@@ -203,11 +67,11 @@
       <div class="card aqua"><div>📈 Success Rate</div><div class="stat-value" id="successRate">0%</div><small>Connection percentage</small></div>
     </div>
 
-    <!-- MVP VOICE LOGIC -->
+    <!-- LIVE CONVERSATION -->
     <div class="live-section">
       <h2>Live Conversation</h2>
-      <button id="startBtn">Start</button>
-      <button id="stopBtn" disabled>Stop</button>
+      <button id="startBtn">Start Call</button>
+      <button id="stopBtn" disabled>Stop Call</button>
       <div>
         Call Duration: <span id="callTimer">00:00</span>
       </div>
@@ -248,7 +112,7 @@
 
     <!-- CALL RECORDS HEADER W/EXPORT BUTTON -->
     <div class="data-header-row">
-      <h3>Call Records</h3>
+      <h3>Detail Call Records</h3>
       <button onclick="window.location='/api/calls/export_csv'">Export CSV</button>
     </div>
     <table>
@@ -260,33 +124,32 @@
       <tbody id="callsTableBody"></tbody>
     </table>
 
-    <!-- VIEW CALL MODAL -->
+    <!-- CALL DETAILS MODAL -->
     <div id="callViewModal" tabindex="-1" role="dialog" aria-hidden="true">
-      <button class="closeButton" onclick="closeModal()">Close</button>
-      <h2 id="modalCustomer"></h2>
-      <label class="modal-label">Audio Clip:</label>
-      <audio id="modalAudio" controls style="width: 100%; margin: 10px 0; background:#efefef;"></audio>
-      <label class="modal-label">Transcript:</label>
-      <pre id="modalTranscript" style="white-space: pre-wrap; max-height: 200px; overflow-y: auto; background:#f5f5f5; padding:10px; border-radius:4px;"></pre>
-      <label class="modal-label">Extracted Entities:</label>
-      <table id="entityTable">
-        <thead>
-          <tr><th>Entity</th><th>Value</th></tr>
-        </thead>
-        <tbody></tbody>
-      </table>
+      <button class="closeButton" onclick="closeModal()">&times;</button>
+      <h2>Call Details</h2>
+      <div class="modal-info">
+        <div class="modal-info-row"><b>Customer:</b> <span id="modalCustomer"></span></div>
+        <div class="modal-info-row"><b>Phone:</b> <span id="modalPhone"></span></div>
+        <div class="modal-info-row"><b>Start Time:</b> <span id="modalStartTime"></span></div>
+        <div class="modal-info-row"><b>End Time:</b> <span id="modalEndTime"></span></div>
+        <div class="modal-info-row"><b>Duration:</b> <span id="modalDuration"></span></div>
+        <div class="modal-info-row"><b>Status:</b> <span id="modalStatus"></span></div>
+        <div class="modal-info-row"><b>Outcome:</b> <span id="modalOutcome"></span></div>
+        <div class="modal-info-row"><b>Audio File:</b> <span id="modalAudioFile"></span></div>
+        <div class="modal-info-row"><b>Sentiment Score:</b> <span id="modalSentiment"></span></div>
+      </div>
+      <div class="modal-label">Full Transcript:</div>
+      <pre id="modalTranscript"></pre>
+      <div class="modal-label">Audio Recording:</div>
+      <audio id="modalAudio" controls></audio>
     </div>
   </div>
-
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
+    // Chart & dashboard data
     let statusChart, outcomeChart;
-
-    async function fetchJson(url) {
-      const resp = await fetch(url);
-      return await resp.json();
-    }
-
+    async function fetchJson(url) { return await (await fetch(url)).json(); }
     async function updateSummary() {
       const data = await fetchJson('/api/call_summary');
       document.getElementById('activeCalls').textContent = data.active_calls || 0;
@@ -294,7 +157,6 @@
       document.getElementById('connectedCalls').textContent = data.connected_calls || 0;
       document.getElementById('successRate').textContent = (data.success_rate || 0) + '%';
     }
-
     async function updateCharts() {
       const statusData = await fetchJson('/api/call_status_pie');
       const ctx1 = document.getElementById('statusDistribution').getContext('2d');
@@ -307,7 +169,6 @@
         },
         options: {cutout: '75%'}
       });
-
       const outcomeData = await fetchJson('/api/call_outcomes_bar');
       const ctx2 = document.getElementById('callOutcomes').getContext('2d');
       if (outcomeChart) outcomeChart.destroy();
@@ -320,19 +181,14 @@
         options: {plugins: {legend: {display:false}}}
       });
     }
-    
-
     async function loadCalls() {
       const filterFrom = document.getElementById('filterFrom').value || '';
       const filterTo = document.getElementById('filterTo').value || '';
       const filterStatus = document.getElementById('filterStatus').value || 'All';
       const filterDuration = document.getElementById('filterDuration').value || '';
       const filterSearch = document.getElementById('filterSearch').value || '';
-
       const url = `/api/calls?from=${encodeURIComponent(filterFrom)}&to=${encodeURIComponent(filterTo)}&status=${encodeURIComponent(filterStatus)}&duration=${encodeURIComponent(filterDuration)}&search=${encodeURIComponent(filterSearch)}`;
-
       const calls = await fetchJson(url);
-
       const tbody = document.getElementById('callsTableBody');
       tbody.innerHTML = '';
       for (const c of calls) {
@@ -350,37 +206,38 @@
         tbody.appendChild(tr);
       }
     }
+    async function refreshAll() { await Promise.all([updateSummary(), updateCharts(), loadCalls()]); }
+    refreshAll(); setInterval(refreshAll, 7000);
 
-    async function refreshAll() {
-      await Promise.all([updateSummary(), updateCharts(), loadCalls()]);
-    }
-
-    refreshAll();
-    setInterval(refreshAll, 7000);
-
-    // Voice recognition and media recording logic
+    // Live conversation and timer
+    let timerInterval, startTime, recognition, recognizing = false, mediaRecorder, audioChunks = [];
     const startBtn = document.getElementById('startBtn');
     const stopBtn = document.getElementById('stopBtn');
     const transcriptEl = document.getElementById('transcript');
     const responseEl = document.getElementById('response');
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const recognition = SpeechRecognition ? new SpeechRecognition() : null;
-    let recognizing = false;
-    let mediaRecorder, audioChunks = [];
-    
+    const callTimerEl = document.getElementById('callTimer');
+    function startTimer() {
+      startTime = Date.now();
+      callTimerEl.textContent = "00:00";
+      timerInterval = setInterval(() => {
+        const elapsed = Date.now() - startTime;
+        const seconds = Math.floor(elapsed / 1000);
+        const minutes = Math.floor(seconds / 60);
+        callTimerEl.textContent =
+          minutes.toString().padStart(2, "0") + ":" + (seconds % 60).toString().padStart(2, "0");
+      }, 1000);
+    }
+    function stopTimer() { clearInterval(timerInterval); timerInterval = null; }
 
-    if (recognition) {
-      recognition.continuous = true;
-      recognition.interimResults = true;
+    if (window.SpeechRecognition || window.webkitSpeechRecognition) {
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognition = new SR();
+      recognition.continuous = true; recognition.interimResults = true; recognition.lang = 'en-IN';
       recognition.onresult = function (event) {
-        let interimTranscript = '';
-        let finalTranscript = '';
+        let interimTranscript = '', finalTranscript = '';
         for (let i = event.resultIndex; i < event.results.length; i++) {
-          if (event.results[i].isFinal) {
-            finalTranscript += event.results[i][0].transcript;
-          } else {
-            interimTranscript += event.results[i][0].transcript;
-          }
+          if (event.results[i].isFinal) { finalTranscript += event.results[i][0].transcript; }
+          else { interimTranscript += event.results[i][0].transcript; }
         }
         transcriptEl.textContent = finalTranscript + interimTranscript;
         if (finalTranscript) {
@@ -397,78 +254,38 @@
         }
       };
     }
-let timerInterval;
-let startTime;
 
-function startTimer() {
-  startTime = Date.now();
-  const timerDisplay = document.getElementById("callTimer");
-  timerDisplay.textContent = "00:00";
-  timerInterval = setInterval(() => {
-    const elapsed = Date.now() - startTime;
-    const seconds = Math.floor(elapsed / 1000);
-    const minutes = Math.floor(seconds / 60);
-    timerDisplay.textContent =
-      minutes.toString().padStart(2, "0") + ":" + (seconds % 60).toString().padStart(2, "0");
-  }, 1000);
-}
-
-function stopTimer() {
-  clearInterval(timerInterval);
-  timerInterval = null;
-}
-
-startBtn.onclick = async function () {
-  transcriptEl.textContent = '';
-  responseEl.textContent = '';
-  if (recognition && !recognizing) {
-    recognition.start();
-    recognizing = true;
-  }
-  audioChunks = [];
-  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-  mediaRecorder = new MediaRecorder(stream);
-  mediaRecorder.start();
-  mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-  mediaRecorder.onstop = async () => {
-    const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
-    const formData = new FormData();
-    formData.append("audio_data", audioBlob, "recording.webm");
-    const res = await fetch("/process", { method: "POST", body: formData });
-    const data = await res.json();
-    transcriptEl.textContent += "\n\n[Full Whisper Transcript]:\n" + data.transcript;
-    responseEl.textContent += "\n\n[Final Reply]:\n" + data.response;
-    speakText(data.response);
-
-    // Update timer display with final duration if provided
-    if (data.duration) {
-      document.getElementById("callTimer").textContent = data.duration;
-    }
-    
-    // Stop timer once processing is complete
-    stopTimer();
-  };
-
-  // Start the timer immediately upon starting the recording
-  startTimer();
-
-  startBtn.disabled = true;
-  stopBtn.disabled = false;
-};
-
-stopBtn.onclick = function () {
-  if (recognition && recognizing) {
-    recognition.stop();
-    recognizing = false;
-  }
-  if (mediaRecorder) {
-    mediaRecorder.stop();
-  }
-  stopTimer();
-
-  startBtn.disabled = false;
-  stopBtn.disabled = true;
-};
+    // Start and stop event handlers for call
+    startBtn.onclick = async function () {
+      transcriptEl.textContent = '';
+      responseEl.textContent = '';
+      if (recognition && !recognizing) { recognition.start(); recognizing = true; }
+      audioChunks = [];
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorder = new MediaRecorder(stream);
+      mediaRecorder.start();
+      mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
+        const formData = new FormData();
+        formData.append("audio_data", audioBlob, "recording.webm");
+        const res = await fetch("/process", { method: "POST", body: formData });
+        const data = await res.json();
+        transcriptEl.textContent += "\n\n[Full Whisper Transcript]:\n" + data.transcript;
+        responseEl.textContent += "\n\n[Final Reply]:\n" + data.response;
+        speakText(data.response);
+        if (data.duration) { callTimerEl.textContent = data.duration; }
+        stopTimer();
+      };
+      startTimer();
+      startBtn.disabled = true; stopBtn.disabled = false;
+    };
+    stopBtn.onclick = function () {
+      if (recognition && recognizing) { recognition.stop(); recognizing = false; }
+      if (mediaRecorder) { mediaRecorder.stop(); }
+      stopTimer();
+      startBtn.disabled = false; stopBtn.disabled = true;
+    };
 
     function speakText(text) {
       if ('speechSynthesis' in window) {
@@ -478,56 +295,40 @@ stopBtn.onclick = function () {
       }
     }
 
-    // Modal View Call implementation with improved audio playback
+    // View Call modal logic
     function viewCall(callId) {
       fetch('/api/call/' + callId)
         .then(res => res.json())
         .then(data => {
-          document.getElementById('modalCustomer').textContent = data.customer || 'Unknown Customer';
-
-          const audioElem = document.getElementById('modalAudio');
-          audioElem.innerHTML = '';
-          if (data.audio_url) {
-            if (data.audio_url.endsWith('.webm')) {
-              audioElem.innerHTML = `<source src="${data.audio_url}" type="audio/webm">`;
-            } else if (data.audio_url.endsWith('.mp3')) {
-              audioElem.innerHTML = `<source src="${data.audio_url}" type="audio/mpeg">`;
-            } else if (data.audio_url.endsWith('.wav')) {
-              audioElem.innerHTML = `<source src="${data.audio_url}" type="audio/wav">`;
-            } else {
-              audioElem.src = data.audio_url;
-            }
-            audioElem.load();
-            audioElem.style.display = '';
-          } else {
-            audioElem.style.display = 'none';
-          }
-
+          document.getElementById('modalCustomer').textContent = data.customer || 'Unknown';
+          document.getElementById('modalPhone').textContent = data.phone || 'N/A';
+          document.getElementById('modalStartTime').textContent = data.start_time || '';
+          document.getElementById('modalEndTime').textContent = data.end_time || '';
+          document.getElementById('modalDuration').textContent = data.duration || 'N/A';
+          document.getElementById('modalStatus').textContent = data.status || '';
+          document.getElementById('modalOutcome').textContent = data.outcome || '';
+          document.getElementById('modalAudioFile').textContent = data.audio_filename || '';
+          document.getElementById('modalSentiment').textContent = data.sentiment !== undefined ? data.sentiment.toFixed(2) : '';
           document.getElementById('modalTranscript').textContent = data.transcript || '[No Transcript Available]';
-
-          let entityHTML = "";
-          if (data.entities && Object.keys(data.entities).length !== 0) {
-            for (const [key, value] of Object.entries(data.entities)) {
-              entityHTML += `<tr><td>${key}</td><td>${value}</td></tr>`;
-            }
-          } else {
-            entityHTML = '<tr><td colspan="2">No entities extracted</td></tr>';
-          }
-          document.querySelector('#entityTable tbody').innerHTML = entityHTML;
-
+          // Setup audio
+          const audioEl = document.getElementById('modalAudio');
+          audioEl.innerHTML = '';
+          if (data.audio_url) {
+            let audioType = "audio/webm";
+            if (data.audio_url.endsWith('.mp3')) audioType = "audio/mpeg";
+            else if (data.audio_url.endsWith('.wav')) audioType = "audio/wav";
+            audioEl.innerHTML = `<source src="${data.audio_url}" type="${audioType}">`;
+            audioEl.style.display = "block";
+            audioEl.load();
+          } else { audioEl.style.display = "none"; }
+        
           document.getElementById('callViewModal').style.display = 'block';
         });
     }
-
     function closeModal() {
       document.getElementById('callViewModal').style.display = 'none';
-      document.getElementById('modalCustomer').textContent = '';
-      const audioElem = document.getElementById('modalAudio');
-      audioElem.innerHTML = '';
-      document.getElementById('modalTranscript').textContent = '';
-      document.querySelector('#entityTable tbody').innerHTML = '';
+      document.getElementById('modalAudio').pause();
     }
   </script>
-
 </body>
 </html>

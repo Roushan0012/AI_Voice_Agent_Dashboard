@@ -396,6 +396,20 @@ def export_calls_csv():
         headers={"Content-Disposition": "attachment;filename=call_records.csv"},
     )
 
+@app.route('/save_transcript', methods=['POST'])
+def save_transcript():
+    data = request.get_json()
+    call_id = data.get('call_id')
+    transcript = data.get('transcript')
+
+    call = Call.query.get(call_id)
+    if not call:
+        return jsonify({"error": "Call not found"}), 404
+
+    call.transcript = transcript
+    db.session.commit()
+    return jsonify({"status": "success"})
+
 
 @app.route('/api/call/<call_id>')
 def call_detail(call_id):
