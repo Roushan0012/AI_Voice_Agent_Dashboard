@@ -1,14 +1,14 @@
 # models.py
 from flask_sqlalchemy import SQLAlchemy
 import json
-
+from datetime import datetime
 db = SQLAlchemy()
 
 class Call(db.Model):
     id = db.Column(db.String, primary_key=True)
     status = db.Column(db.String)
-    start_time = db.Column(db.String)
-    end_time = db.Column(db.String)
+    start_time = db.Column(db.DateTime, default=datetime.utcnow)   # ✅ DateTime
+    end_time = db.Column(db.DateTime)
     audio_filename = db.Column(db.String)
     transcript = db.Column(db.Text)
     entities = db.Column(db.Text)  # JSON string

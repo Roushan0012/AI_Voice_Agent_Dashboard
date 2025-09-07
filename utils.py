@@ -63,7 +63,7 @@ def add_call(status='active'):
     call = Call(
         id=call_id,
         status=status,
-        start_time=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        start_time=datetime.utcnow(),
         end_time=None,
         audio_filename="",
         transcript="",
@@ -90,15 +90,16 @@ def end_call(call_id, end_time=None):
     call = Call.query.filter_by(id=call_id).first()
     if call and call.status != 'ended':
         call.status = 'ended'
-        call.end_time = end_time if end_time else datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        call.end_time = end_time if end_time else datetime.utcnow()
+
         try:
-            start = datetime.strptime(call.start_time, "%Y-%m-%d %H:%M:%S")
-            end = datetime.strptime(call.end_time, "%Y-%m-%d %H:%M:%S")
-            mins, secs = divmod((end - start).seconds, 60)
+            mins, secs = divmod(int((call.end_time - call.start_time).total_seconds()), 60)
             call.duration = f"{mins}m {secs}s"
         except Exception:
             call.duration = "N/A"
+
         db.session.commit()
+
 
 
 def transcribe_audio(file_path):
