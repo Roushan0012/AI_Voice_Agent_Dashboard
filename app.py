@@ -1,5 +1,4 @@
 from flask import Flask, request, render_template, jsonify, Response, send_from_directory, abort
-from flask_sqlalchemy import SQLAlchemy
 import os
 from datetime import datetime
 import openai
@@ -8,57 +7,25 @@ import json
 import re
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 import random
+from config import Config
+from models import db, Call   # ✅ import from models.py
 
 app = Flask(__name__)
 
 RECORDING_DIR = os.path.join(os.path.dirname(__file__), 'recording')
 os.makedirs(RECORDING_DIR, exist_ok=True)
 
-# Database setup with SQLite
+# Database setup
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///calls.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db = SQLAlchemy(app)
-
-# Initialize VADER sentiment analyzer
-vader_analyzer = SentimentIntensityAnalyzer()
-
-
-# -----------------------------
-# Database Model
-# -----------------------------
-class Call(db.Model):
-    id = db.Column(db.String, primary_key=True)
-    status = db.Column(db.String)
-    start_time = db.Column(db.String)
-    end_time = db.Column(db.String)
-    audio_filename = db.Column(db.String)
-    transcript = db.Column(db.Text)
-    entities = db.Column(db.Text)  # JSON string
-    outcome = db.Column(db.String)
-    sentiment = db.Column(db.Float)
-    customer = db.Column(db.String)
-    phone = db.Column(db.String)
-    duration = db.Column(db.String)
-
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "status": self.status,
-            "start_time": self.start_time,
-            "end_time": self.end_time,
-            "audio_filename": self.audio_filename,
-            "transcript": self.transcript,
-            "entities": json.loads(self.entities) if self.entities else {},
-            "outcome": self.outcome,
-            "sentiment": self.sentiment,
-            "customer": self.customer,
-            "phone": self.phone,
-            "duration": self.duration,
-        }
-
+db.init_app(app)   # ✅ initialize db with app
 
 with app.app_context():
     db.create_all()
+
+
+# Initialize VADER sentiment analyzer
+vader_analyzer = SentimentIntensityAnalyzer()
 
 
 # -----------------------------
