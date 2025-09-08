@@ -91,13 +91,13 @@ def end_call(call_id, end_time=None):
     if call and call.status != 'ended':
         call.status = 'ended'
         call.end_time = end_time if end_time else datetime.utcnow()
-
         try:
-            mins, secs = divmod(int((call.end_time - call.start_time).total_seconds()), 60)
+            diff = (call.end_time - call.start_time).total_seconds()
+            mins, secs = divmod(int(diff), 60)
             call.duration = f"{mins}m {secs}s"
-        except Exception:
+        except Exception as e:
+            print("Duration calc error:", e)
             call.duration = "N/A"
-
         db.session.commit()
 
 
