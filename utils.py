@@ -1,134 +1,121 @@
 # utils.py
-import re
-import random
+import os
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from uuid import uuid4
-import openai
-from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+from groq import Groq
 from models import db, Call
+from app import app # <-- CRITICAL: Pulls in Flask context for background DB saves
 
-# Initialize VADER sentiment analyzer
-vader_analyzer = SentimentIntensityAnalyzer()
+# Ensure Groq API key is loaded
+from dotenv import load_dotenv
+load_dotenv()
 
-# Conversation memory for AI
-conversation = []
+# Initialize Groq client
+client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
-def classify_outcome_and_sentiment(transcript):
-    scores = vader_analyzer.polarity_scores(transcript)
-    compound = scores['compound']  # Value between -1 and 1
-    normalized_sentiment = (compound + 1) / 2  # Normalize to 0-1 range
+# ==========================================
+# 1. GROQ AI DATA EXTRACTION
+# ==========================================
 
-    if normalized_sentiment >= 0.65:
-        outcome = "Interested"
-    elif normalized_sentiment >= 0.35:
-        outcome = "Neutral"
-    else:
-        outcome = "Not Interested"
+def analyze_call_transcript(transcript_text: str):
+    """Uses Groq (Llama 3) to extract exact JSON data from the transcript."""
+    default_data = {"customer_name": "Unknown", "phone_number": "Unknown", "sentiment": 0.5, "outcome": "Neutral"}
+    
+    if not transcript_text.strip():
+        return default_data
 
-    return outcome, normalized_sentiment
-
-
-def extract_customer_info(transcript):
-    name = "Unknown"
-    phone = None
-
-    # Try to find name formats: Mr./Ms./Mrs. Name
-    match = re.search(r'(Mr\.|Ms\.|Mrs\.)\s+([A-Z][a-z]+)', transcript)
-    if match:
-        name = f"{match.group(1)} {match.group(2)}"
-    else:
-        # Try common phrases
-        match = re.search(
-            r'(my name is|I am|this is)\s+([A-Z][a-z]+\s?[A-Z]?[a-z]*?)',
-            transcript,
-            re.IGNORECASE,
+    try:
+        # Prompting Groq to act as an analyst and return strict JSON
+        completion = client.chat.completions.create(
+            model="llama3-8b-8192", # Free and fast Groq model
+            messages=[
+                {
+                    "role": "system", 
+                    "content": (
+                        "You are a QA data extraction assistant. Read the transcript and output ONLY a valid JSON object. "
+                        "The JSON object must contain exactly these keys: "
+                        "\"customer_name\" (The caller's full name, or \"Unknown\"), "
+                        "\"phone_number\" (The 10-digit phone number, or \"Unknown\"), "
+                        "\"sentiment_score\" (A float between 0.0 for very negative and 1.0 for very positive), "
+                        "\"outcome\" (Must be exactly one of: \"Interested\", \"Neutral\", or \"Not Interested\")."
+                    )
+                },
+                {"role": "user", "content": f"Transcript:\n{transcript_text}"}
+            ],
+            response_format={"type": "json_object"},
+            temperature=0.1 # Low temperature for consistent formatting
         )
-        if match:
-            name = match.group(2).strip()
+        
+        # Parse the JSON string returned by Groq into a dictionary
+        analysis = json.loads(completion.choices[0].message.content)
+        
+        return {
+            "customer_name": analysis.get("customer_name", "Unknown"),
+            "phone_number": analysis.get("phone_number", "Unknown"),
+            "sentiment": float(analysis.get("sentiment_score", 0.5)),
+            "outcome": analysis.get("outcome", "Neutral")
+        }
+    except Exception as e:
+        print(f"Error analyzing transcript with Groq: {e}")
+        return default_data
 
-    # Try to extract a 10-digit number for phone
-    phone_match = re.search(r'\b(\d{10})\b', transcript)
-    if phone_match:
-        phone = phone_match.group(1)
-    else:
-        # Generate dummy 10-digit number starting with 9
-        phone = '9' + ''.join(str(random.randint(0, 9)) for _ in range(9))
 
-    return name, phone
-
+# ==========================================
+# 2. DATABASE HELPERS
+# ==========================================
 
 def add_call(status='active'):
-    call_id = str(uuid4())
-    call = Call(
-        id=call_id,
-        status=status,
-        start_time=datetime.utcnow(),
-        end_time=None,
-        audio_filename="",
-        transcript="",
-        entities=json.dumps({}),
-        outcome="Pending",
-        sentiment=0.5,
-        customer="Unknown",
-        phone="N/A",
-        duration="N/A",
-    )
-    db.session.add(call)
-    db.session.commit()
-    return call
-
+    """Creates a new call record when the LiveKit room connects."""
+    with app.app_context(): # <-- Tells Flask we are allowed to touch the DB
+        call_id = str(uuid4())
+        call = Call(
+            id=call_id,
+            status=status,
+            start_time=datetime.now(timezone.utc),
+            end_time=None,
+            transcript="",
+            outcome="Pending",
+            sentiment=0.5,
+            customer="Unknown",
+            phone="N/A",
+            duration="N/A",
+        )
+        db.session.add(call)
+        db.session.commit()
+        return call_id 
 
 def mark_call_connected(call_id):
-    call = Call.query.filter_by(id=call_id).first()
-    if call:
-        call.status = 'connected'
-        db.session.commit()
+    """Updates the status when the user actually starts speaking."""
+    with app.app_context():
+        call = Call.query.filter_by(id=call_id).first()
+        if call:
+            call.status = 'connected'
+            db.session.commit()
 
+def end_call(call_id, final_transcript, end_time=None):
+    """Ends the call, calculates duration, and runs the AI analysis."""
+    with app.app_context():
+        call = Call.query.filter_by(id=call_id).first()
+        if call and call.status != 'ended':
+            call.status = 'ended'
+            call.end_time = end_time if end_time else datetime.now(timezone.utc)
+            call.transcript = final_transcript
+            
+            # Calculate Duration
+            try:
+                diff = (call.end_time - call.start_time).total_seconds()
+                mins, secs = divmod(int(diff), 60)
+                call.duration = f"{mins}m {secs}s"
+            except Exception as e:
+                print("Duration calc error:", e)
+                call.duration = "N/A"
 
-def end_call(call_id, end_time=None):
-    call = Call.query.filter_by(id=call_id).first()
-    if call and call.status != 'ended':
-        call.status = 'ended'
-        call.end_time = end_time if end_time else datetime.utcnow()
-        try:
-            diff = (call.end_time - call.start_time).total_seconds()
-            mins, secs = divmod(int(diff), 60)
-            call.duration = f"{mins}m {secs}s"
-        except Exception as e:
-            print("Duration calc error:", e)
-            call.duration = "N/A"
-        db.session.commit()
+            # Run AI Analysis automatically
+            analysis_results = analyze_call_transcript(final_transcript)
+            call.customer = analysis_results["customer_name"]
+            call.phone = analysis_results["phone_number"]
+            call.sentiment = analysis_results["sentiment"]
+            call.outcome = analysis_results["outcome"]
 
-
-
-def transcribe_audio(file_path):
-    try:
-        with open(file_path, "rb") as audio_file:
-            transcript = openai.audio.transcriptions.create(
-                model="whisper-1",
-                file=audio_file
-            )
-        return transcript.text
-    except Exception as e:
-        print("Transcription error:", e)
-        return None
-
-
-def ai_response(user_text, system_prompt=None):
-    global conversation
-    try:
-        if not conversation and system_prompt:
-            conversation.append({"role": "system", "content": system_prompt})
-
-        conversation.append({"role": "user", "content": user_text})
-        completion = openai.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=conversation
-        )
-        response_text = completion.choices[0].message.content
-        conversation.append({"role": "assistant", "content": response_text})
-        return response_text
-    except Exception as e:
-        print("AI response error:", e)
-        return "Error generating AI response."
+            db.session.commit()

@@ -1,21 +1,29 @@
 from flask import Flask
-import os
+from flask_cors import CORS
+import os  # <-- Add this
 from models import db
-from routes.main_routes import main_bp
 from routes.api_routes import api_bp
+from config import Config  
 
 app = Flask(__name__)
 
+# Allow your React frontend to communicate with this Flask backend
+CORS(app) 
+
+# Load configuration from config.py
+app.config.from_object(Config)
+
 # Database setup
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///calls.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
+
+# <-- Add these two lines to guarantee the folder exists! -->
+if not os.path.exists('instance'):
+    os.makedirs('instance')
 
 with app.app_context():
     db.create_all()
 
-# Register blueprints
-app.register_blueprint(main_bp)
+# Register ONLY the API blueprint
 app.register_blueprint(api_bp)
 
 if __name__ == '__main__':

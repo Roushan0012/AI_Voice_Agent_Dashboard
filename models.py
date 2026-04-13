@@ -1,17 +1,16 @@
 # models.py
 from flask_sqlalchemy import SQLAlchemy
-import json
-from datetime import datetime
+from datetime import datetime, timezone
+
 db = SQLAlchemy()
 
 class Call(db.Model):
     id = db.Column(db.String, primary_key=True)
     status = db.Column(db.String)
-    start_time = db.Column(db.DateTime, default=datetime.utcnow)   # ✅ DateTime
+    # Use timezone-aware datetime for the default
+    start_time = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))   
     end_time = db.Column(db.DateTime)
-    audio_filename = db.Column(db.String)
     transcript = db.Column(db.Text)
-    entities = db.Column(db.Text)  # JSON string
     outcome = db.Column(db.String)
     sentiment = db.Column(db.Float)
     customer = db.Column(db.String)
@@ -22,11 +21,10 @@ class Call(db.Model):
         return {
             "id": self.id,
             "status": self.status,
-            "start_time": self.start_time,
-            "end_time": self.end_time,
-            "audio_filename": self.audio_filename,
+            # Format dates to ISO strings so React can read them easily
+            "start_time": self.start_time.isoformat() if self.start_time else None,
+            "end_time": self.end_time.isoformat() if self.end_time else None,
             "transcript": self.transcript,
-            "entities": json.loads(self.entities) if self.entities else {},
             "outcome": self.outcome,
             "sentiment": self.sentiment,
             "customer": self.customer,
