@@ -2,7 +2,7 @@ import asyncio
 from dotenv import load_dotenv
 from livekit.agents import JobContext, WorkerOptions, cli, Agent, AgentSession
 from livekit.plugins import openai, silero
-from utils import add_call, mark_call_connected, end_call  # <-- CRITICAL: IMPORT YOUR HELPERS
+from utils import add_call, mark_call_connected, end_call 
 
 load_dotenv()
 
@@ -20,7 +20,6 @@ class FinanceAgent(Agent):
 
 async def entrypoint(ctx: JobContext):
     # 1. Create the call record in the database immediately
-    # We wrap this in a thread because Flask-SQLAlchemy needs an app context
     from app import app
     with app.app_context():
         call_id = add_call(status='active')
@@ -32,6 +31,7 @@ async def entrypoint(ctx: JobContext):
     with app.app_context():
         mark_call_connected(call_id)
 
+    # Initialize the Voice Session
     session = AgentSession(
         vad=silero.VAD.load(),
         stt=openai.STT(),
@@ -46,40 +46,44 @@ async def entrypoint(ctx: JobContext):
         allow_interruptions=True
     )
 
-    # 3. Wait for the call to end, then save everything
-    @ctx.room.on("participant_disconnected")
-    def on_disconnected(participant):
-        # Get the full transcript from the session
-        final_transcript = ""
-        for msg in session.chat_ctx.messages:
-            if msg.role in ["user", "assistant"]:
-                final_transcript += f"{msg.role}: {msg.text}\n"
-        
-        # Save transcript and run AI Analysis (Name, Sentiment, Outcome)
-        with app.app_context():
-            end_call(call_id, final_transcript)
-        print(f"Call {call_id} ended and analyzed successfully!")
-
+    # ==========================================
+    # 3. BULLETPROOF DISCONNECT TRIGGER
+    # Automatically extracts and saves the conversation when the call ends
+    # ==========================================
     @ctx.room.on("disconnected")
     def on_disconnect():
-            print("📞 Call disconnected! Extracting transcript and saving to database...")
-            
-            # 1. Extract the full conversation from the AI's memory
-            transcript = ""
-            for msg in agent.chat_ctx.messages:
-                # We skip the system prompt so it doesn't clutter the dashboard
-                if msg.role != "system":
-                    role_name = "AI (Raj)" if msg.role == "assistant" else "Customer"
-                    transcript += f"{role_name}: {msg.content}\n"
-            
-            # 2. If the transcript is empty, just put a placeholder
-            if not transcript.strip():
-                transcript = "No conversation recorded."
+        print("📞 Call disconnected! Extracting transcript and saving to database...")
+        
+        transcript = ""
+        try:
+            # Safely grab the chat context from your 'session' variable
+            chat_history = getattr(session, "chat_ctx", None) or getattr(session, "_chat_ctx", None)
 
-            # 3. Send it to utils.py to analyze the sentiment and save to SQLite!
-            from utils import end_call # Ensure it's imported
-            end_call(call_id, transcript)
-            print("✅ Call saved successfully!")
+            if chat_history and hasattr(chat_history, "messages"):
+                for msg in chat_history.messages:
+                    if msg.role != "system":
+                        role_name = "AI (Raj)" if msg.role == "assistant" else "Customer"
+                        
+                        # LiveKit sometimes uses msg.text and sometimes msg.content
+                        msg_data = getattr(msg, "content", None) or getattr(msg, "text", "")
+                        
+                        if msg_data:
+                            transcript += f"{role_name}: {msg_data}\n"
+            else:
+                transcript = "Could not locate chat history."
+
+        except Exception as e:
+            print(f"⚠️ Error extracting transcript: {e}")
+            transcript = "Error reading conversation."
+
+        # Fallback if no talking happened
+        if not transcript.strip():
+            transcript = "No conversation recorded."
+
+        # Send to utils.py to trigger Groq AI and update the Database!
+        from utils import end_call
+        end_call(call_id, transcript)
+        print("✅ Call saved successfully!")
 
 if __name__ == "__main__":
     cli.run_app(WorkerOptions(entrypoint_fnc=entrypoint))

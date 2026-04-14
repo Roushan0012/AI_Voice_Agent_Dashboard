@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Search, Eye, X, Download } from 'lucide-react';
+import { Search, Eye, X } from 'lucide-react';
 
 const CallTable = () => {
   const [calls, setCalls] = useState([]);
@@ -24,16 +24,26 @@ const CallTable = () => {
     }
   };
 
-  // Fetch immediately on load and when filters change
+  // FIXED: Fetch immediately on load, AND auto-refresh every 5 seconds!
   useEffect(() => {
     fetchCalls();
-  }, []);
+    const interval = setInterval(fetchCalls, 5000);
+    return () => clearInterval(interval);
+  }, [searchTerm, statusFilter]);
 
   // Helper for Sentiment Color
   const getSentimentColor = (score) => {
     if (score >= 0.65) return 'bg-green-100 text-green-700';
     if (score >= 0.4) return 'bg-yellow-100 text-yellow-700';
     return 'bg-red-100 text-red-700';
+  };
+
+  // Helper for clean date formatting
+  const formatTime = (timeString) => {
+    if (!timeString) return 'N/A';
+    return new Date(timeString).toLocaleString('en-IN', {
+      month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+    });
   };
 
   return (
@@ -98,13 +108,15 @@ const CallTable = () => {
               <tr key={call.id} className="border-b hover:bg-gray-50 transition-colors">
                 <td className="p-3 font-medium text-gray-800">{call.customer}</td>
                 <td className="p-3 text-gray-600">{call.phone}</td>
-                <td className="p-3 text-gray-600">
-                  {new Date(call.start_time).toLocaleString()}
-                </td>
-                <td className="p-3 text-gray-600">{call.duration}</td>
+                
+                {/* FIXED: Formatted Start Time */}
+                <td className="p-3 text-gray-600">{formatTime(call.start_time)}</td>
+                
+                <td className="p-3 text-gray-600">{call.duration || 'N/A'}</td>
+                
                 <td className="p-3">
                   <span className={`px-2 py-1 rounded-full text-xs font-bold ${call.status === 'connected' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-200 text-gray-700'}`}>
-                    {call.status.toUpperCase()}
+                    {call.status ? call.status.toUpperCase() : 'UNKNOWN'}
                   </span>
                 </td>
                 <td className="p-3">
@@ -114,7 +126,7 @@ const CallTable = () => {
                 </td>
                 <td className="p-3">
                   <span className={`px-2 py-1 rounded text-xs font-bold ${getSentimentColor(call.sentiment)}`}>
-                    {call.sentiment.toFixed(2)}
+                    {Math.round((call.sentiment || 0) * 100)}%
                   </span>
                 </td>
                 <td className="p-3 text-center">
@@ -152,20 +164,28 @@ const CallTable = () => {
 
             {/* Modal Content */}
             <div className="p-6 overflow-y-auto">
-              <div className="grid grid-cols-2 gap-4 mb-6">
-                <div><span className="font-semibold text-gray-500">Customer:</span> <span className="font-medium">{selectedCall.customer}</span></div>
-                <div><span className="font-semibold text-gray-500">Phone:</span> <span className="font-medium">{selectedCall.phone}</span></div>
-                <div><span className="font-semibold text-gray-500">Date:</span> <span>{new Date(selectedCall.start_time).toLocaleString()}</span></div>
-                <div><span className="font-semibold text-gray-500">Duration:</span> <span>{selectedCall.duration}</span></div>
-                <div><span className="font-semibold text-gray-500">Outcome:</span> <span className="px-2 py-1 rounded bg-blue-100 text-blue-700 text-xs font-bold ml-2">{selectedCall.outcome}</span></div>
-                <div><span className="font-semibold text-gray-500">Sentiment:</span> <span className={`px-2 py-1 rounded text-xs font-bold ml-2 ${getSentimentColor(selectedCall.sentiment)}`}>{selectedCall.sentiment.toFixed(2)}</span></div>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+                <div><span className="font-semibold text-gray-500 block text-xs uppercase">Customer</span> <span className="font-medium">{selectedCall.customer}</span></div>
+                <div><span className="font-semibold text-gray-500 block text-xs uppercase">Phone</span> <span className="font-medium">{selectedCall.phone}</span></div>
+                <div><span className="font-semibold text-gray-500 block text-xs uppercase">Date</span> <span>{formatTime(selectedCall.start_time)}</span></div>
+                <div><span className="font-semibold text-gray-500 block text-xs uppercase">Duration</span> <span>{selectedCall.duration || 'N/A'}</span></div>
+                <div>
+                  <span className="font-semibold text-gray-500 block text-xs uppercase mb-1">Outcome</span> 
+                  <span className="px-2 py-1 rounded bg-blue-100 text-blue-700 text-xs font-bold">{selectedCall.outcome}</span>
+                </div>
+                <div>
+                  <span className="font-semibold text-gray-500 block text-xs uppercase mb-1">Sentiment</span> 
+                  <span className={`px-2 py-1 rounded text-xs font-bold ${getSentimentColor(selectedCall.sentiment)}`}>
+                    {Math.round((selectedCall.sentiment || 0) * 100)}%
+                  </span>
+                </div>
               </div>
 
               <div className="border-t pt-4">
                 <h4 className="font-bold text-gray-700 mb-2 flex items-center gap-2">
                   Full Transcript
                 </h4>
-                <div className="bg-slate-50 p-4 rounded-lg border text-sm text-gray-700 whitespace-pre-wrap h-64 overflow-y-auto font-mono">
+                <div className="bg-slate-50 p-4 rounded-lg border text-sm text-gray-700 whitespace-pre-wrap h-64 overflow-y-auto font-mono leading-relaxed shadow-inner">
                   {selectedCall.transcript || "No transcript available for this call."}
                 </div>
               </div>
